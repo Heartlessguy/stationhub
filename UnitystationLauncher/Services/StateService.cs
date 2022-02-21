@@ -1,26 +1,28 @@
-﻿using Avalonia.Collections;
-using MoreLinq.Extensions;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using Avalonia.Collections;
+using MoreLinq.Extensions;
+using Serilog;
+using UnitystationLauncher.Models;
+using UnitystationLauncher.Models.Api;
 
-namespace UnitystationLauncher.Models
+namespace UnitystationLauncher.Services
 {
-    public class StateManager
+    public class StateService
     {
-        public StateManager(ServerManager serverManager, InstallationManager installationManager, DownloadManager downloadManager)
+        public StateService(ServerService serverService, InstallationService installationService, DownloadService downloadService)
         {
-            var groupedServerEvents = serverManager.Servers
+            var groupedServerEvents = serverService.Servers
                 .Select(servers => servers
                     .GroupBy(s => s.ForkAndVersion));
 
-            var downloadEvents = downloadManager.Downloads.GetWeakCollectionChangedObservable()
-                .Select(d => downloadManager.Downloads)
-                .Merge(Observable.Return(downloadManager.Downloads));
+            var downloadEvents = downloadService.Downloads.GetWeakCollectionChangedObservable()
+                .Select(d => downloadService.Downloads)
+                .Merge(Observable.Return(downloadService.Downloads));
 
-            var installationEvents = installationManager.Installations;
+            var installationEvents = installationService.Installations;
 
             State = groupedServerEvents
                 .CombineLatest(installationEvents, (servers, installations) => (servers, installations))
@@ -37,7 +39,7 @@ namespace UnitystationLauncher.Models
                     s => s,
                     (s, download) => new ForkInstall(download, s.Installation, s.Servers)))
                 .Select(x => x.ToDictionary(d => d.ForkAndVersion, d => d))
-                .Do(x => Log.Logger.Information("state changed"))
+                .Do(x => Log.Information("State changed"))
                 .Replay(1)
                 .RefCount();
         }

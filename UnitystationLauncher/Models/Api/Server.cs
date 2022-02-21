@@ -1,8 +1,9 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using UnitystationLauncher.Models.ConfigFile;
 
-namespace UnitystationLauncher.Models
+namespace UnitystationLauncher.Models.Api
 {
     public class Server
     {
@@ -57,8 +58,6 @@ namespace UnitystationLauncher.Models
         }
 
         public string InstallationName => ForkName + BuildVersion;
-
-        public string Description => $"BuildVersion: {BuildVersion} - Map: {CurrentMap} - Gamemode: {GameMode} - Time: {InGameTime}";
 
         public string InstallationPath => Path.Combine(Config.InstallationsPath, InstallationName);
 
